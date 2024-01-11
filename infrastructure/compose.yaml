@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: 'postgres:latest'
+    environment:
+      - 'POSTGRES_DB=kata'
+      - 'POSTGRES_PASSWORD=kata'
+      - 'POSTGRES_USER=kata'
+    ports:
+      - '5432'
+  pgadmin:
+    image: 'dpage/pgadmin4:latest'
+    environment:
+      PGADMIN_DEFAULT_EMAIL: kata@exalt.com
+      PGADMIN_DEFAULT_PASSWORD: kata
+    ports:
+      - "8888:80"
