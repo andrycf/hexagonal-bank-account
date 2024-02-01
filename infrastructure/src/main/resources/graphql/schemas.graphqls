@@ -1,21 +1,25 @@
+# java.time.LocalDateTime implementation
+scalar LocalDateTime
+scalar Double
+
 type Account {
     accountNumber: ID!
-    balance: String
+    balance: Double
 }
 
 input AccountInput {
     accountNumber: ID!
-    balance: String
+    balance: Double
 }
 
 type Transaction{
     amount: String
-    timestamp: String 
+    timestamp: LocalDateTime 
 }
 
 input TransactionInput{
     accountNumber: ID!
-    amount: String
+    amount: Double
 }
 
 
