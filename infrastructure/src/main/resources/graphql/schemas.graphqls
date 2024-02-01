@@ -5,6 +5,7 @@ scalar Double
 type Account {
     accountNumber: ID!
     balance: Double
+    getTransactionHistory: [Transaction]
 }
 
 input AccountInput {
