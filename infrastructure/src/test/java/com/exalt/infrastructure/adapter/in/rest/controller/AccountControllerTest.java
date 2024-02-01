@@ -5,7 +5,8 @@ import com.exalt.infrastructure.adapter.out.postgres.entity.AccountEntity;
 import com.exalt.infrastructure.adapter.out.postgres.repository.AccountRepository;
 import com.exalt.infrastructure.utils.Utils;
 import jakarta.inject.Inject;
-import org.junit.jupiter.api.BeforeEach;
+
+import org.junit.Before;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -37,7 +38,7 @@ class AccountControllerTest {
     @ServiceConnection
     static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer("postgres:latest");
 
-    @BeforeEach
+    @Before
     public void setup() {
         this.mockMvc = MockMvcBuilders
                 .standaloneSetup(AccountController.class)
