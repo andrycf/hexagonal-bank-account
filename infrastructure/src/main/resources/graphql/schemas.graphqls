@@ -6,6 +6,7 @@ type Account {
     accountNumber: ID!
     balance: Double
     getTransactionHistory: [Transaction]
+    transactions(first: Int, last: Int, before: String, after: String): TransactionConnection
 }
 
 input AccountInput {
