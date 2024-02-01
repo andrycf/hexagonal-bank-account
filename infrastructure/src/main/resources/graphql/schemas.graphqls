@@ -1,0 +1,31 @@
+type Account {
+    accountNumber: ID!
+    balance: String
+}
+
+input AccountInput {
+    accountNumber: ID!
+    balance: String
+}
+
+type Transaction{
+    amount: String
+    timestamp: String 
+}
+
+input TransactionInput{
+    accountNumber: ID!
+    amount: String
+}
+
+
+type Query {
+    getBalance(accountNumber: ID!) : Account
+    getTransactionHistory(accountNumber: ID!) : [Transaction]
+}
+
+type Mutation {
+    create(account: AccountInput) : Account
+    deposit(transaction: TransactionInput) : Account
+    withdraw(transaction: TransactionInput) : Account
+}
