@@ -5,7 +5,7 @@ import com.exalt.infrastructure.adapter.in.rest.controller.TransactionController
 import com.exalt.infrastructure.adapter.in.rest.dto.AccountDTO;
 import com.exalt.infrastructure.adapter.in.rest.dto.TransactionRequest;
 import com.exalt.infrastructure.utils.Utils;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -36,7 +36,7 @@ class InfrastructureTests {
     @Container
     static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer("postgres:latest");
 
-    @Before
+    @BeforeEach
     public void setup() {
         this.mockMvc = MockMvcBuilders
                 .standaloneSetup(AccountController.class, TransactionController.class)
