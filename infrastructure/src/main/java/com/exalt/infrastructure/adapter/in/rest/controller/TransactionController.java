@@ -8,10 +8,11 @@ import com.exalt.infrastructure.adapter.in.rest.service.TransactionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping(
@@ -36,8 +37,8 @@ public class TransactionController {
             }
     )
     @GetMapping("/{accountNumber}")
-    public List<TransactionResponse> getTransactionHistory(@PathVariable String accountNumber){
-        return transactionService.checkTransactionHistory(accountNumber);
+    public Flux<TransactionResponse> getTransactionHistory(@PathVariable String accountNumber){
+        return Flux.fromIterable(transactionService.checkTransactionHistory(accountNumber));
     }
 
     @Operation(
@@ -50,8 +51,8 @@ public class TransactionController {
             }
     )
     @PatchMapping(value = "/deposit",consumes = MediaType.APPLICATION_JSON_VALUE)
-    public AccountDTO deposit(@RequestBody TransactionRequest transactionRequest){
-        return transactionService.depositAmount(transactionRequest);
+    public Mono<AccountDTO> deposit(@RequestBody TransactionRequest transactionRequest){
+        return Mono.just(transactionService.depositAmount(transactionRequest));
     }
 
     @Operation(
@@ -64,7 +65,7 @@ public class TransactionController {
             }
     )
     @PatchMapping(value = "/withdraw",consumes = MediaType.APPLICATION_JSON_VALUE)
-    public AccountDTO withdraw(@RequestBody TransactionRequest transactionRequest){
-        return transactionService.withdrawAmount(transactionRequest);
+    public Mono<AccountDTO> withdraw(@RequestBody TransactionRequest transactionRequest){
+        return Mono.just(transactionService.withdrawAmount(transactionRequest));
     }
 }

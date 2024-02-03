@@ -5,6 +5,8 @@ import com.exalt.infrastructure.adapter.in.rest.service.AccountService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import reactor.core.publisher.Mono;
+
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,8 +33,8 @@ public class AccountController {
             }
     )
     @GetMapping("/{accountNumber}")
-    public AccountDTO getBalance(@PathVariable String accountNumber){
-        return accountService.checkBalance(accountNumber);
+    public Mono<AccountDTO> getBalance(@PathVariable String accountNumber){
+        return Mono.just(accountService.checkBalance(accountNumber));
     }
 
     @Operation(
@@ -45,7 +47,7 @@ public class AccountController {
             }
     )
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public AccountDTO create(@RequestBody AccountDTO accountDTO){
-        return accountService.createAccount(accountDTO);
+    public Mono<AccountDTO> create(@RequestBody AccountDTO accountDTO){
+        return Mono.just(accountService.createAccount(accountDTO));
     }
 }
