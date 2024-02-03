@@ -1,5 +1,6 @@
 package com.exalt.infrastructure;
 
+import com.exalt.domain.model.Transaction;
 import com.exalt.infrastructure.adapter.in.rest.controller.AccountController;
 import com.exalt.infrastructure.adapter.in.rest.controller.TransactionController;
 import com.exalt.infrastructure.adapter.in.rest.dto.AccountDTO;
@@ -9,10 +10,12 @@ import com.exalt.infrastructure.utils.Utils;
 import org.junit.Before;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -27,22 +30,16 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-@AutoConfigureMockMvc
+@AutoConfigureWebTestClient
 @Testcontainers
 class InfrastructureTests {
 
     @Autowired
-    private MockMvc mockMvc;
+    private WebTestClient webTestClient;
+
     @ServiceConnection
     @Container
-    static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer("postgres:latest");
-
-    @Before
-    public void setup() {
-        this.mockMvc = MockMvcBuilders
-                .standaloneSetup(AccountController.class, TransactionController.class)
-                .build();
-    }
+    static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:latest");
 
     @Test
     void shouldCompleted() throws Exception {
@@ -60,58 +57,67 @@ class InfrastructureTests {
     }
 
     void getTransactionHistory(String accountNumber,int expectedCountTransaction) throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders
-                        .get("/transaction/"+accountNumber)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.*").value(hasSize(expectedCountTransaction)));
+        webTestClient.get()
+        .uri("/transaction/{accountNumber}",accountNumber)
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectStatus().isOk()
+        .expectBodyList(Transaction.class).hasSize(expectedCountTransaction);
 
     }
 
     void getBalance(String accountNumber,double expectedBalance) throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders
-                        .get("/account/"+accountNumber)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.*").exists())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.accountNumber").value(accountNumber))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.balance").value(expectedBalance));
+        webTestClient.get()
+        .uri("/account/{accountNumber}",accountNumber)
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectStatus().isOk()
+        .expectBody()
+        .jsonPath("$.*").exists()
+        .jsonPath("$.accountNumber").isEqualTo(accountNumber)
+        .jsonPath("$.balance").isEqualTo(expectedBalance);
     }
+
     void create(String accountNumber,double balance) throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders
-                        .post("/account")
-                        .contentType("application/json")
-                        .content(Objects.requireNonNull(Utils.asJsonString(new AccountDTO(accountNumber, balance))))
-                        .accept("application/json"))
-                .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.*").exists())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.accountNumber").value(accountNumber))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.balance").value(balance));
+        webTestClient.post()
+        .uri("/account")
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON)
+        .bodyValue(new AccountDTO(accountNumber, balance))
+        .exchange()
+        .expectStatus().isOk()
+        .expectBody()
+        .jsonPath("$.*").exists()
+        .jsonPath("$.accountNumber").isEqualTo(accountNumber)
+        .jsonPath("$.balance").isEqualTo(balance);
     }
 
     void deposit(String accountNumber,double amount,double expectedBalance) throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders
-                        .patch("/transaction/deposit")
-                        .contentType("application/json")
-                        .content(Objects.requireNonNull(Utils.asJsonString(new TransactionRequest(accountNumber, amount))))
-                        .accept("application/json"))
-                .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.*").exists())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.accountNumber").value(accountNumber))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.balance").value(expectedBalance));
+        webTestClient.patch()
+        .uri("/transaction/deposit")
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON)
+        .bodyValue(new TransactionRequest(accountNumber, amount))
+        .exchange()
+        .expectStatus().isOk()
+        .expectBody()
+        .jsonPath("$.*").exists()
+        .jsonPath("$.accountNumber").isEqualTo(accountNumber)
+        .jsonPath("$.balance").isEqualTo(expectedBalance);
 
     }
     void withdraw(String accountNumber,double amount,double expectedBalance) throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders
-                        .patch("/transaction/withdraw")
-                        .contentType("application/json")
-                        .content(Objects.requireNonNull(Utils.asJsonString(new TransactionRequest(accountNumber, amount))))
-                        .accept("application/json"))
-                .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.*").exists())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.accountNumber").value(accountNumber))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.balance").value(expectedBalance));
-
+        webTestClient.patch()
+        .uri("/transaction/withdraw")
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON)
+        .bodyValue(new TransactionRequest(accountNumber, amount))
+        .exchange()
+        .expectStatus().isOk()
+        .expectBody()
+        .jsonPath("$.*").exists()
+        .jsonPath("$.accountNumber").isEqualTo(accountNumber)
+        .jsonPath("$.balance").isEqualTo(expectedBalance);
     }
 
 }

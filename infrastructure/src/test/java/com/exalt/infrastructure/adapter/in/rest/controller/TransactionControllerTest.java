@@ -5,100 +5,91 @@ import com.exalt.infrastructure.adapter.out.postgres.entity.AccountEntity;
 import com.exalt.infrastructure.adapter.out.postgres.entity.TransactionEntity;
 import com.exalt.infrastructure.adapter.out.postgres.repository.AccountRepository;
 import com.exalt.infrastructure.adapter.out.postgres.repository.TransactionRepository;
-import com.exalt.infrastructure.utils.Utils;
 import jakarta.inject.Inject;
-import org.junit.Before;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
-
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-@AutoConfigureMockMvc
+@AutoConfigureWebTestClient
 @Testcontainers
 class TransactionControllerTest {
 
     @Autowired
-    private MockMvc mockMvc;
+    private WebTestClient webTestClient;
     @Inject
     private TransactionRepository transactionRepository;
     @Inject
     private AccountRepository accountRepository;
     @Container
     @ServiceConnection
-    static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer("postgres:latest");
+    static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:latest");
 
-    @Before
-    public void setup() {
-        this.mockMvc = MockMvcBuilders
-                .standaloneSetup(TransactionController.class)
-                .build();
+    @BeforeEach
+    void setUp(){
+        transactionRepository.deleteAll();
     }
 
     @Test
     void getTransactionHistory() throws Exception {
-        transactionRepository.deleteAll();
         transactionRepository.save(new TransactionEntity(
                 "12345",
                 LocalDateTime.now(),
                 100
         ));
-        mockMvc.perform(MockMvcRequestBuilders
-                        .get("/transaction/12345")
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.*").exists())
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].amount").value(100));
+
+        webTestClient.get().uri("/transaction/12345")
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectStatus().isOk()
+        .expectBody()
+        .jsonPath("$.*").exists()
+        .jsonPath("$[0].amount").isEqualTo(100)
+        .returnResult();
 
     }
 
     @Test
     void deposit() throws Exception {
-        accountRepository.deleteAll();
         accountRepository.save(new AccountEntity("12345",1000));
-        mockMvc.perform(MockMvcRequestBuilders
-                        .patch("/transaction/deposit")
-                        .contentType("application/json")
-                        .content(Objects.requireNonNull(Utils.asJsonString(new TransactionRequest("12345", 2000))))
-                        .accept("application/json"))
-                .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.*").exists())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.accountNumber").value("12345"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.balance").value(3000));
 
+        webTestClient.patch().uri("/transaction/deposit")
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON)
+        .bodyValue(new TransactionRequest("12345", 2000))
+        .exchange()
+        .expectStatus().isOk()
+        .expectBody()
+        .jsonPath("$.*").exists()
+        .jsonPath("$.accountNumber").isEqualTo("12345")
+        .jsonPath("$.balance").isEqualTo(3000);
     }
 
     @Test
     void withdraw() throws Exception {
-        accountRepository.deleteAll();
         accountRepository.save(new AccountEntity("12345",1000));
-        mockMvc.perform(MockMvcRequestBuilders
-                        .patch("/transaction/withdraw")
-                        .contentType("application/json")
-                        .content(Objects.requireNonNull(Utils.asJsonString(new TransactionRequest("12345", -500))))
-                        .accept("application/json"))
-                .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.*").exists())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.accountNumber").value("12345"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.balance").value(500));
+
+        webTestClient.patch().uri("/transaction/withdraw")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .bodyValue(new TransactionRequest("12345", -500))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.*").exists()
+                .jsonPath("$.accountNumber").isEqualTo("12345")
+                .jsonPath("$.balance").isEqualTo(500);
 
     }
 }

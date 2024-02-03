@@ -3,70 +3,62 @@ package com.exalt.infrastructure.adapter.in.rest.controller;
 import com.exalt.infrastructure.adapter.in.rest.dto.AccountDTO;
 import com.exalt.infrastructure.adapter.out.postgres.entity.AccountEntity;
 import com.exalt.infrastructure.adapter.out.postgres.repository.AccountRepository;
-import com.exalt.infrastructure.utils.Utils;
 import jakarta.inject.Inject;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.util.Objects;
-
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 @SpringBootTest
-@AutoConfigureMockMvc
+@AutoConfigureWebTestClient
 @Testcontainers
 class AccountControllerTest {
 
     @Autowired
-    private MockMvc mockMvc;
+    private WebTestClient webTestClient;
     @Inject
     private AccountRepository accountRepository;
     @Container
     @ServiceConnection
-    static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer("postgres:latest");
+    static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:latest");
 
-    @Before
-    public void setup() {
-        this.mockMvc = MockMvcBuilders
-                .standaloneSetup(AccountController.class)
-                .build();
+    @BeforeEach
+    void setUp(){
+        accountRepository.deleteAll();
     }
+
     @Test
     void getBalance() throws Exception {
-        accountRepository.deleteAll();
         accountRepository.save(new AccountEntity("1234",1000));
-        mockMvc.perform(MockMvcRequestBuilders
-                        .get("/account/1234")
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.*").exists())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.accountNumber").value("1234"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.balance").value(1000));
+
+        webTestClient.get().uri("/account/1234")
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectStatus().isOk()
+        .expectBody()
+        .jsonPath("$.*").exists()
+        .jsonPath("$.accountNumber").isEqualTo("1234")
+        .jsonPath("$.balance").isEqualTo(1000);
     }
 
     @Test
     void create() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders
-                        .post("/account")
-                        .contentType("application/json")
-                        .content(Objects.requireNonNull(Utils.asJsonString(new AccountDTO("12345", 2000))))
-                        .accept("application/json"))
-                .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.*").exists())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.accountNumber").value("12345"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.balance").value(2000));
+        webTestClient.post().uri("/account")
+        .accept(MediaType.APPLICATION_JSON)
+        .bodyValue(new AccountDTO("12345", 2000))
+        .exchange()
+        .expectStatus().isOk()
+        .expectBody()
+        .jsonPath("$.*").exists()
+        .jsonPath("$.accountNumber").isEqualTo("12345")
+        .jsonPath("$.balance").isEqualTo(2000);
     }
 }
