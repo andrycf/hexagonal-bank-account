@@ -1,5 +1,10 @@
 package com.exalt.infrastructure.adapter.out.postgres;
 
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+
 import com.exalt.domain.model.Account;
 import com.exalt.domain.model.Transaction;
 import com.exalt.domain.ports.spi.BankRepositoryPort;
@@ -7,10 +12,6 @@ import com.exalt.infrastructure.adapter.out.postgres.mapper.AccountEntityMapperA
 import com.exalt.infrastructure.adapter.out.postgres.mapper.TransactionEntityMapperAdapter;
 import com.exalt.infrastructure.adapter.out.postgres.repository.AccountRepository;
 import com.exalt.infrastructure.adapter.out.postgres.repository.TransactionRepository;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 public class BankRepositoryAdapter implements BankRepositoryPort {

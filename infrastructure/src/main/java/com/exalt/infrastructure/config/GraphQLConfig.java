@@ -20,13 +20,13 @@ import graphql.schema.GraphQLScalarType;
 
 @Configuration
 public class GraphQLConfig {
-    
+
     @Bean
-    GraphQLScalarType localDateTimeScalar(){
+    GraphQLScalarType localDateTimeScalar() {
         return GraphQLScalarType.newScalar()
-              .name("LocalDateTime")
-              .description("A Java LocalDateTime type")
-              .coercing(new Coercing<LocalDateTime,String>() {
+                .name("LocalDateTime")
+                .description("A Java LocalDateTime type")
+                .coercing(new Coercing<LocalDateTime, String>() {
                     @Override
                     public String serialize(Object input,
                             GraphQLContext graphQLContext, Locale locale)
@@ -36,26 +36,26 @@ public class GraphQLConfig {
 
                     @Override
                     public LocalDateTime parseValue(Object input, GraphQLContext graphQLContext,
-                        Locale locale) throws CoercingParseValueException {
+                            Locale locale) throws CoercingParseValueException {
                         return LocalDateTime.parse(input.toString(), DateTimeFormatter.ISO_TIME);
                     }
 
                     @Override
                     public LocalDateTime parseLiteral(Value<?> input,
-                        CoercedVariables variables, GraphQLContext graphQLContext,
-                        Locale locale) throws CoercingParseLiteralException {
-                            return LocalDateTime.parse(((StringValue) input).getValue(), DateTimeFormatter.ISO_TIME);
+                            CoercedVariables variables, GraphQLContext graphQLContext,
+                            Locale locale) throws CoercingParseLiteralException {
+                        return LocalDateTime.parse(((StringValue) input).getValue(), DateTimeFormatter.ISO_TIME);
                     }
-              })
-              .build();
+                })
+                .build();
     }
 
     @Bean
-    GraphQLScalarType doubleScalar(){
+    GraphQLScalarType doubleScalar() {
         return GraphQLScalarType.newScalar()
-              .name("Double")
-              .description("A Java Double type")
-              .coercing(new Coercing<Double,String>() {
+                .name("Double")
+                .description("A Java Double type")
+                .coercing(new Coercing<Double, String>() {
                     @Override
                     public String serialize(Object input,
                             GraphQLContext graphQLContext, Locale locale)
@@ -65,18 +65,18 @@ public class GraphQLConfig {
 
                     @Override
                     public Double parseValue(Object input, GraphQLContext graphQLContext,
-                        Locale locale) throws CoercingParseValueException {
+                            Locale locale) throws CoercingParseValueException {
                         return Double.parseDouble(input.toString());
                     }
 
                     @Override
                     public Double parseLiteral(Value<?> input,
-                        CoercedVariables variables, GraphQLContext graphQLContext,
-                        Locale locale) throws CoercingParseLiteralException {
-                            return Double.parseDouble(((StringValue) input).getValue());
+                            CoercedVariables variables, GraphQLContext graphQLContext,
+                            Locale locale) throws CoercingParseLiteralException {
+                        return Double.parseDouble(((StringValue) input).getValue());
                     }
-              })
-              .build();
+                })
+                .build();
     }
 
     @Bean
